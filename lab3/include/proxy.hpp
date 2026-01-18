@@ -1,36 +1,41 @@
-/* Proxy object.
- * @file
- * @date 2018-08-07
- * @author Anonymous
- */
-
 #ifndef __PROXY_HPP__
 #define __PROXY_HPP__
 
 #include <mutex>
+#include <utility>
 
 template<class T, class MutexInjection = std::mutex>
 class ptr_holder
 {
 public:
-    ptr_holder(T* ptr): ptr_(ptr) {}
+    explicit ptr_holder(T* ptr)
+        : ptr_(ptr)
+    {}
 
-    //{ describe proxy object
-    class proxy: private ???
+    // proxy object
+    class proxy : private std::lock_guard<MutexInjection>
     {
     public:
-        proxy(???): ???
+        // constructor for holder-based access
+        proxy(T* ptr, MutexInjection& mutex)
+            : proxy::lock_guard(mutex)
+            , ptr_(ptr)
         {}
 
+        // recursive operator->
+        T* operator->() const
+        {
+            return ptr_;
+        }
+
     private:
-        ???
+        T* ptr_;
     };
 
-    ??? operator -> () const
+    proxy operator->() const
     {
-        return ???;
+        return proxy(ptr_, mutex_);
     }
-    //}
 
 private:
     T* ptr_;
